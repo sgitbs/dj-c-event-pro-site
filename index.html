@@ -329,14 +329,54 @@ async function submitForm(){
   const message=document.getElementById('message').value.trim();
   const statusEl=document.getElementById('formStatus');
   const btn=document.getElementById('submitBtn');
-  if(!firstName||!email){statusEl.textContent='Please enter your name and email.';statusEl.className='form-status error';return;}
-  btn.textContent='Sending...';btn.disabled=true;
-  const subj=encodeURIComponent('DJC Event Pro Inquiry from '+firstName+' '+lastName);
-  const body=encodeURIComponent('Name: '+firstName+' '+lastName+'\nEmail: '+email+'\nPhone: '+(phone||'Not provided')+'\nEvent: '+(eventType||'Not specified')+'\nDate: '+(eventDate||'Not specified')+'\n\nDetails:\n'+(message||'None.'));
-  window.location.href='mailto:thedjdorian@gmail.com?subject='+subj+'&body='+body;
-  statusEl.textContent='Opening your email app with the inquiry ready to send.';
-  statusEl.className='form-status success';
-  btn.textContent='Send Inquiry';btn.disabled=false;
+
+  if(!firstName||!email){
+    statusEl.textContent='Please enter your name and email.';
+    statusEl.className='form-status error';
+    return;
+  }
+
+  btn.textContent='Sending...';
+  btn.disabled=true;
+
+  try {
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'Accept':'application/json'},
+      body: JSON.stringify({
+        access_key: 'db181903-b2e4-4a17-b84d-432fd62755f2',
+        subject: 'DJC Event Pro Inquiry — ' + (eventType||'Event') + ' from ' + firstName + ' ' + lastName,
+        from_name: 'DJC Event Pro Website',
+        name: firstName + ' ' + lastName,
+        email: email,
+        phone: phone || 'Not provided',
+        event_type: eventType || 'Not specified',
+        event_date: eventDate || 'Not specified',
+        message: message || 'No additional details.'
+      })
+    });
+    const data = await res.json();
+    if(data.success){
+      statusEl.textContent='✓ Message sent! DJ Dorian will be in touch shortly.';
+      statusEl.className='form-status success';
+      document.getElementById('firstName').value='';
+      document.getElementById('lastName').value='';
+      document.getElementById('emailInput').value='';
+      document.getElementById('phoneInput').value='';
+      document.getElementById('eventType').value='';
+      document.getElementById('eventDate').value='';
+      document.getElementById('message').value='';
+    } else {
+      statusEl.textContent='Something went wrong. Please call (323) 886-7383.';
+      statusEl.className='form-status error';
+    }
+  } catch(e){
+    statusEl.textContent='Something went wrong. Please call (323) 886-7383.';
+    statusEl.className='form-status error';
+  }
+
+  btn.textContent='Send Inquiry';
+  btn.disabled=false;
 }
 </script>
 </body>
